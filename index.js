@@ -37,21 +37,46 @@ async function run() {
   try {
 
     const exploreHubDB = client.db('jobtask');
-    const productCollection = exploreHubDB.collection('Product');
+    const productCollection = exploreHubDB.collection('products');
     
 
+    
+    // Get all jobs data from db for pagination
     app.get('/products', async (req, res) => {
-      const cursor = productCollection.find();
-      const result = await cursor.toArray();
-      res.send(result);
-    })
-    app.get('/myproducts',async(req,res)=>{
-        
+      const size = parseInt(req.query.size)
+      const page = parseInt(req.query.page) - 1
+      const filter = req.query.filter
+      const sort = req.query.sort
+      const search = req.query.search
+      console.log(size, page)
+
+      let query = {
+        job_title: { $regex: search, $options: 'i' },
+      }
+      if (filter) query.category = filter
+      let options = {}
+      if (sort) options = { sort: { deadline: sort === 'asc' ? 1 : -1 } }
+      const result = await productCollection
+        .find(query, options)
+        .skip(page * size)
+        .limit(size)
+        .toArray()
+
+      res.send(result)
     })
 
-   
-    
-    
+    // Get all jobs data count from db
+    app.get('/products-count', async (req, res) => {
+      const filter = req.query.filter
+      const search = req.query.search
+      let query = {
+        product_name: { $regex: search, $options: 'i' },
+      }
+      if (filter) query.category = filter
+      const count = await productCollection.countDocuments(query)
+      console.log('total products',count);
+      res.send({ count })
+    })
 
   } finally {
     // Ensures that the client will close when you finish/error
