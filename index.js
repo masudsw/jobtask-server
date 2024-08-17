@@ -41,21 +41,35 @@ async function run() {
     
 
     
-    // Get all jobs data from db for pagination
+    // Get all products data from db for pagination
     app.get('/products', async (req, res) => {
       const size = parseInt(req.query.size)
       const page = parseInt(req.query.page) - 1
-      const filter = req.query.filter
-      const sort = req.query.sort
+      const filterCategory = req.query.filterCategory
+      const filterBrand=req.query.filterBrand
+      const filterPrice=req.query.filterPrice
+      
       const search = req.query.search
       console.log(size, page)
 
       let query = {
-        job_title: { $regex: search, $options: 'i' },
+        product_name: { $regex: search, $options: 'i' },
       }
-      if (filter) query.category = filter
-      let options = {}
-      if (sort) options = { sort: { deadline: sort === 'asc' ? 1 : -1 } }
+      if (filterCategory) query.Category = filterCategory
+      if(filterBrand) query.brand_name=filterBrand
+      if (filterPrice) {
+        if (filterPrice === 'hundred') {
+            query.Price = { $gte: 0, $lte: 100 };
+        } else if (filterPrice === 'five_hundred') {
+            query.Price = { $gte: 101, $lte: 500 };
+        } else if (filterPrice === 'thousand') {
+            query.Price = { $gte: 501, $lte: 1000 };
+        } else if(filterPrice==='five_thousand'){
+          query.Price = { $gte: 1001, $lte: 5000 };
+        }
+    }
+       let options = {}
+     
       const result = await productCollection
         .find(query, options)
         .skip(page * size)
@@ -65,14 +79,30 @@ async function run() {
       res.send(result)
     })
 
-    // Get all jobs data count from db
+    // Get all products data count from db
     app.get('/products-count', async (req, res) => {
-      const filter = req.query.filter
+      const filterCategory = req.query.filterCategory
+      const filterBrand=req.query.filterBrand
+      const filterPrice=req.query.filterPrice
       const search = req.query.search
+      console.log(filterBrand,filterCategory,filterPrice,search);
       let query = {
         product_name: { $regex: search, $options: 'i' },
       }
-      if (filter) query.category = filter
+      if (filterCategory) query.Category = filterCategory
+      if(filterBrand) query.brand_name=filterBrand
+      if (filterPrice) {
+        if (filterPrice === 'hundred') {
+            query.Price = { $gte: 0, $lte: 100 };
+        } else if (filterPrice === 'five_hundred') {
+            query.Price = { $gte: 101, $lte: 500 };
+        } else if (filterPrice === 'thousand') {
+            query.Price = { $gte: 501, $lte: 1000 };
+        } else if(filterPrice==='five_thousand'){
+          query.Price = { $gte: 1001, $lte: 5000 };
+        }
+    }
+      
       const count = await productCollection.countDocuments(query)
       console.log('total products',count);
       res.send({ count })
