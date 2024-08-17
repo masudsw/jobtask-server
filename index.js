@@ -9,7 +9,7 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 
 app.use(express.json());
 app.use(cors({
-  origin: ["http://localhost:5173"]
+  origin: ["http://localhost:5173","https://calm-daifuku-5689e9.netlify.app"]
 }))
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.tatfmly.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
